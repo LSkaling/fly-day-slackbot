@@ -1,0 +1,70 @@
+{
+    "blocks": [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "A new fly day event has been created by {user_mention}."
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "section-1",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Where will you be flying?*\n{flying_field}"
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "section-2",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*What type of event?*\n{event_type}"
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "section-3",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Date:*\n{selected_date}"
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "section-4",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Start Time:*\n{start_time}"
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "section-5",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*End Time:*\n{end_time}"
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "section-6",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Event Details (Optional):*\n{event_details}"
+        }
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Thank you for creating this event!"
+        }
+      }
+    ]
+  }
+  

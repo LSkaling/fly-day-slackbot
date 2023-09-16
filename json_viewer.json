@@ -1,0 +1,78 @@
+{'type': 'view_submission', 'team': {'id': 'T0KSB4BBJ', 'domain': 'stanfordflightclub', 'enterprise_id': 'E7SAV7LAD', 'enterprise_name': 'Stanford University'
+    }, 'user': {'id': 'U020661S3FY', 'username': 'lskaling', 'name': 'lskaling', 'team_id': 'T0KSB4BBJ'
+    }, 'api_app_id': 'A05SJNZT87P', 'token': 'SmYzuYupo9pmxh3DQ4nX1AgL', 'trigger_id': '5906635332738.19895147392.5a0e4bf4bec77e5e6d38972419946238', 'view': {'id': 'V05T180P0AV', 'team_id': 'T0KSB4BBJ', 'type': 'modal', 'blocks': [
+            {'type': 'section', 'block_id': 'section-1', 'text': {'type': 'mrkdwn', 'text': 'Where will you be flying?', 'verbatim': False
+                }, 'accessory': {'type': 'static_select', 'action_id': 'flying-field', 'placeholder': {'type': 'plain_text', 'text': 'Select a field', 'emoji': True
+                    }, 'options': [
+                        {'text': {'type': 'plain_text', 'text': 'Lake Lagunita', 'emoji': True
+                            }, 'value': 'lake-lag'
+                        },
+                        {'text': {'type': 'plain_text', 'text': 'Coyote Hill', 'emoji': True
+                            }, 'value': 'coyote-hill'
+                        },
+                        {'text': {'type': 'plain_text', 'text': 'Off Campus', 'emoji': True
+                            }, 'value': 'off-campus'
+                        }
+                    ]
+                }
+            },
+            {'type': 'section', 'block_id': 'section-2', 'text': {'type': 'mrkdwn', 'text': 'What type of event?', 'verbatim': False
+                }, 'accessory': {'type': 'static_select', 'action_id': 'event_type', 'placeholder': {'type': 'plain_text', 'text': 'Select an option', 'emoji': True
+                    }, 'options': [
+                        {'text': {'type': 'plain_text', 'text': 'Private', 'emoji': True
+                            }, 'value': 'private'
+                        },
+                        {'text': {'type': 'plain_text', 'text': 'Public', 'emoji': True
+                            }, 'value': 'public'
+                        }
+                    ]
+                }
+            },
+            {'type': 'section', 'block_id': 'context-section', 'text': {'type': 'mrkdwn', 'text': '*Private:* Only notifies the leadership team. \n *Public:* Notifies all members, and sends alerts leading up to the event.', 'verbatim': False
+                }
+            },
+            {'type': 'input', 'block_id': 'date_picker_input', 'label': {'type': 'plain_text', 'text': 'Select Date', 'emoji': True
+                }, 'optional': False, 'dispatch_action': False, 'element': {'type': 'datepicker', 'action_id': 'date_picker_action', 'placeholder': {'type': 'plain_text', 'text': 'Select a date', 'emoji': True
+                    }
+                }
+            },
+            {'type': 'input', 'block_id': 'start_time_picker_input', 'label': {'type': 'plain_text', 'text': 'Start Time', 'emoji': True
+                }, 'optional': False, 'dispatch_action': False, 'element': {'type': 'timepicker', 'action_id': 'start_time_picker_action', 'placeholder': {'type': 'plain_text', 'text': 'Select a start time', 'emoji': True
+                    }
+                }
+            },
+            {'type': 'input', 'block_id': 'end_time_picker_input', 'label': {'type': 'plain_text', 'text': 'End Time', 'emoji': True
+                }, 'optional': False, 'dispatch_action': False, 'element': {'type': 'timepicker', 'action_id': 'end_time_picker_action', 'placeholder': {'type': 'plain_text', 'text': 'Select an end time', 'emoji': True
+                    }
+                }
+            },
+            {'type': 'input', 'block_id': 'long_text_input', 'label': {'type': 'plain_text', 'text': 'Event Details (Optional)', 'emoji': True
+                }, 'optional': False, 'dispatch_action': False, 'element': {'type': 'plain_text_input', 'action_id': 'long_text_input', 'multiline': True, 'dispatch_action_config': {'trigger_actions_on': ['on_enter_pressed'
+                        ]
+                    }
+                }
+            }
+        ], 'private_metadata': '', 'callback_id': 'create-fly-day-modal', 'state': {'values': {'section-1': {'flying-field': {'type': 'static_select', 'selected_option': {'text': {'type': 'plain_text', 'text': 'Coyote Hill', 'emoji': True
+                            }, 'value': 'coyote-hill'
+                        }
+                    }
+                }, 'section-2': {'event_type': {'type': 'static_select', 'selected_option': {'text': {'type': 'plain_text', 'text': 'Public', 'emoji': True
+                            }, 'value': 'public'
+                        }
+                    }
+                }, 'date_picker_input': {'date_picker_action': {'type': 'datepicker', 'selected_date': '2023-09-05'
+                    }
+                }, 'start_time_picker_input': {'start_time_picker_action': {'type': 'timepicker', 'selected_time': '06: 00'
+                    }
+                }, 'end_time_picker_input': {'end_time_picker_action': {'type': 'timepicker', 'selected_time': '08: 00'
+                    }
+                }, 'long_text_input': {'long_text_input': {'type': 'plain_text_input', 'value': 'teafageaw'
+                    }
+                }
+            }
+        }, 'hash': '1694884435.fYSeURNt', 'title': {'type': 'plain_text', 'text': 'My Modal', 'emoji': True
+        }, 'clear_on_close': False, 'notify_on_close': False, 'close': None, 'submit': {'type': 'plain_text', 'text': 'Submit', 'emoji': True
+        }, 'previous_view_id': None, 'root_view_id': 'V05T180P0AV', 'app_id': 'A05SJNZT87P', 'external_id': '', 'app_installed_team_id': 'T0KSB4BBJ', 'bot_id': 'B05SMMDM6QJ'
+    }, 'response_urls': [], 'is_enterprise_install': False, 'enterprise': {'id': 'E7SAV7LAD', 'name': 'Stanford University'
+    }
+}

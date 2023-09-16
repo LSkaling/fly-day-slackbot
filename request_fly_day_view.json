@@ -1,6 +1,6 @@
 {
     "type": "modal",
-    "callback_id": "create-fly-day-modal",
+    "callback_id": "modal-identifier",
     "title": {
         "type": "plain_text",
         "text": "My Modal"
@@ -87,50 +87,14 @@
         },
         {
             "type": "input",
-            "block_id": "date_picker_input",
+            "block_id": "short_text_input",
             "label": {
                 "type": "plain_text",
-                "text": "Select Date"
+                "text": "What will you be flying?"
             },
             "element": {
-                "type": "datepicker",
-                "action_id": "date_picker_action",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Select a date"
-                }
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "start_time_picker_input",
-            "label": {
-                "type": "plain_text",
-                "text": "Start Time"
-            },
-            "element": {
-                "type": "timepicker",
-                "action_id": "start_time_picker_action",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Select a start time"
-                }
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "end_time_picker_input",
-            "label": {
-                "type": "plain_text",
-                "text": "End Time"
-            },
-            "element": {
-                "type": "timepicker",
-                "action_id": "end_time_picker_action",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Select an end time"
-                }
+                "type": "plain_text_input",
+                "action_id": "short_text_input"
             }
         },
         {
