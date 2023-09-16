@@ -1,0 +1,125 @@
+{
+    "type": "modal",
+    "callback_id": "modal-identifier",
+    "title": {
+        "type": "plain_text",
+        "text": "My Modal"
+    },
+    "blocks": [
+        {
+            "type": "section",
+            "block_id": "section-1",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Where will you be flying?"
+            },
+            "accessory": {
+                "type": "static_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a field"
+                },
+                "options": [
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Lake Lagunita"
+                        },
+                        "value": "lake-lag"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Coyote Hill"
+                        },
+                        "value": "coyote-hill"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Off Campus"
+                        },
+                        "value": "off-campus"
+                    }
+                ],
+                "action_id": "flying-field"
+            }
+        },
+        {
+            "type": "section",
+            "block_id": "section-2",
+            "text": {
+                "type": "mrkdwn",
+                "text": "What type of event?"
+            },
+            "accessory": {
+                "type": "static_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select an option"
+                },
+                "options": [
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Private"
+                        },
+                        "value": "private"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Public"
+                        },
+                        "value": "public"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Event"
+                        },
+                        "value": "event"
+                    }
+                ],
+                "action_id": "event_type"
+            }
+        },
+        {
+            "type": "section",
+            "block_id": "context-section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*Private:* Only notifies the leadership team. \n *Public:* Notifies all members. \n *Event:* Notifies all members, and sends reminders 24 hours and 2 hours before the start."
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "short_text_input",
+            "label": {
+                "type": "plain_text",
+                "text": "Short Text Input"
+            },
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "short_text_input"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "long_text_input",
+            "label": {
+                "type": "plain_text",
+                "text": "Event Details (Optional)"
+            },
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "long_text_input",
+                "multiline": true
+            }
+        }
+    ],
+    "submit": {
+        "type": "plain_text",
+        "text": "Submit"
+    }
+}
