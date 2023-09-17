@@ -8,13 +8,15 @@ import urllib.parse
 from datetime import datetime
 import mysql.connector
 from json_view_parser import parse_json
+import io
+from icalendar import Calendar, Event
 
 ## Slack Parameters
 FLIGHT_APPROVAL_CHANNEL = "C05TAMAAD08" #Channel ID for #fly-day-approval
 FLIGHT_ANNOUNCEMENT_CHANNEL = "C05TAMAAD08" #Channel ID for #fly-day
 FLIGHT_COORDINATOR_CHANNEL = "C05SKL4BLQM" #Channel ID for #slack-bot-testing
 
-NON_FLIGHT_COORDINATOR = True
+NON_FLIGHT_COORDINATOR = False
 
 # Initializes your app with your bot token and socket mode handler
 env_path = Path('.') / '.env'
@@ -50,6 +52,16 @@ def generate_google_calendar_link(start_datetime, end_datetime, description, loc
     link = f"https://www.google.com/calendar/render?action=TEMPLATE&text={title}&dates={start}/{end}&details={description}&location={location}"
     
     return link
+
+def generate_apple_calendar_link(event_title, event_description, event_start, event_end, event_location):
+    # Create a new Event
+    event = Event()
+    event.add('summary', event_title)
+    event.add('description', event_description)
+    event.add('location', event_location)
+    event.add('dtstart', event_start)
+    event.add('dtend', event_end)
+    return event.to_ical().decode('utf-8')
 
 def convert_to_datetime(date_str, start_time_str, end_time_str):
     # Combine date and time strings
@@ -97,6 +109,8 @@ def save_event_to_database(start_event, end_event, event_details, flying_field, 
 def send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details):
     calendar_link = generate_google_calendar_link(start_event, end_event, event_details, flying_field)
     print(calendar_link)
+    apple_calendar_link = generate_apple_calendar_link("Flight Club Fly Day", event_details, start_event, end_event, flying_field)
+    print(apple_calendar_link)
 
     fly_day_announcement = parse_json("fly_day_announcement.json", {
         "user_id": user_id,
@@ -181,7 +195,6 @@ def open_modal(ack, body, client):
         client.views_open(
             trigger_id=body["trigger_id"],
             view=create_fly_day_view,  # Use the view JSON read from the file
-            private_metadata="flight_coordinator"
         )
     else: #Shows modal to request a fly day
         print("User is not a flight coordinator")
@@ -189,7 +202,6 @@ def open_modal(ack, body, client):
         client.views_open(
             trigger_id=body["trigger_id"],
             view=create_fly_day_view,  # Use the view JSON read from the file
-            private_metadata="not_flight_coordinator"
         )
 
     print(get_flight_coordinators())
@@ -210,11 +222,14 @@ def handle_view_events(ack, body, logger):
     start_time = body['view']['state']['values']['start_time_picker_input']['start_time_picker_action']['selected_time']
     end_time = body['view']['state']['values']['end_time_picker_input']['end_time_picker_action']['selected_time']
     event_details = body['view']['state']['values']['long_text_input']['long_text_input']['value']
-    user_is_flight_coordinator = body['view']['private_metadata'] == "flight_coordinator"
+    user_is_flight_coordinator = user_id in get_flight_coordinators()
+
+    print("\n\n")
+    print(body['view']['private_metadata'])
 
     start_event, end_event = convert_to_datetime(selected_date, start_time, end_time)
 
-    if user_is_flight_coordinator and event_type == "Public":
+    if user_is_flight_coordinator and not NON_FLIGHT_COORDINATOR:
         send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details)
     else:
         send_fly_day_request(user_id, flying_field, start_event, end_event, event_details, event_type)
@@ -337,6 +352,27 @@ def handle_some_action(ack, body, logger):
 def handle_some_action(ack, body, logger):
     ack()
     logger.info(body)
+
+@flask_app.route('/generate_calendar')
+def generate_calendar():
+    print("Generating calendar")
+    # Get parameters from the request (e.g., summary, description, location, start_time, end_time)
+    summary = request.args.get('summary')
+    description = request.args.get('description')
+    location = request.args.get('location')
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+
+    # Generate iCalendar data
+    icalendar_data = generate_apple_calendar_link(summary, description, location, start_time, end_time)
+
+    # Set the appropriate content type
+    response = Response(icalendar_data, content_type='text/calendar')
+
+    # Set the filename for the iCalendar file (optional)
+    response.headers['Content-Disposition'] = 'attachment; filename="event.ics"'
+
+    return response
 
 #Testing
 def test_handle_view_events():

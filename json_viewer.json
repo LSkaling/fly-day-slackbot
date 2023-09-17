@@ -1,6 +1,9 @@
 {'type': 'view_submission', 'team': {'id': 'T0KSB4BBJ', 'domain': 'stanfordflightclub', 'enterprise_id': 'E7SAV7LAD', 'enterprise_name': 'Stanford University'
     }, 'user': {'id': 'U020661S3FY', 'username': 'lskaling', 'name': 'lskaling', 'team_id': 'T0KSB4BBJ'
-    }, 'api_app_id': 'A05SJNZT87P', 'token': 'SmYzuYupo9pmxh3DQ4nX1AgL', 'trigger_id': '5906635332738.19895147392.5a0e4bf4bec77e5e6d38972419946238', 'view': {'id': 'V05T180P0AV', 'team_id': 'T0KSB4BBJ', 'type': 'modal', 'blocks': [
+    }, 'api_app_id': 'A05SJNZT87P', 'token': 'SmYzuYupo9pmxh3DQ4nX1AgL', 'trigger_id': '5909844577220.19895147392.bb09519a0e4cac81c4e48aec67c29f19', 'view': {'id': 'V05SGN73762', 'team_id': 'T0KSB4BBJ', 'type': 'modal', 'blocks': [
+            {'type': 'section', 'block_id': 'intro-section', 'text': {'type': 'mrkdwn', 'text': 'You are a Flight Coordinator, so this form will be sent directly to the <#CJHTZE9T8|fly-day> channel when you submit it.', 'verbatim': False
+                }
+            },
             {'type': 'section', 'block_id': 'section-1', 'text': {'type': 'mrkdwn', 'text': 'Where will you be flying?', 'verbatim': False
                 }, 'accessory': {'type': 'static_select', 'action_id': 'flying-field', 'placeholder': {'type': 'plain_text', 'text': 'Select a field', 'emoji': True
                     }, 'options': [
@@ -28,7 +31,7 @@
                     ]
                 }
             },
-            {'type': 'section', 'block_id': 'context-section', 'text': {'type': 'mrkdwn', 'text': '*Private:* Only notifies the leadership team. \n *Public:* Notifies all members, and sends alerts leading up to the event.', 'verbatim': False
+            {'type': 'section', 'block_id': 'context-section', 'text': {'type': 'mrkdwn', 'text': '*Private:* Only notifies the leadership team. \n *Public:* Notifies all members and sends alerts leading up to the event.', 'verbatim': False
                 }
             },
             {'type': 'input', 'block_id': 'date_picker_input', 'label': {'type': 'plain_text', 'text': 'Select Date', 'emoji': True
@@ -52,27 +55,27 @@
                     }
                 }
             }
-        ], 'private_metadata': '', 'callback_id': 'create-fly-day-modal', 'state': {'values': {'section-1': {'flying-field': {'type': 'static_select', 'selected_option': {'text': {'type': 'plain_text', 'text': 'Coyote Hill', 'emoji': True
-                            }, 'value': 'coyote-hill'
+        ], 'private_metadata': '', 'callback_id': 'create-fly-day-modal', 'state': {'values': {'section-1': {'flying-field': {'type': 'static_select', 'selected_option': {'text': {'type': 'plain_text', 'text': 'Lake Lagunita', 'emoji': True
+                            }, 'value': 'lake-lag'
                         }
                     }
                 }, 'section-2': {'event_type': {'type': 'static_select', 'selected_option': {'text': {'type': 'plain_text', 'text': 'Public', 'emoji': True
                             }, 'value': 'public'
                         }
                     }
-                }, 'date_picker_input': {'date_picker_action': {'type': 'datepicker', 'selected_date': '2023-09-05'
+                }, 'date_picker_input': {'date_picker_action': {'type': 'datepicker', 'selected_date': '2023-09-20'
                     }
-                }, 'start_time_picker_input': {'start_time_picker_action': {'type': 'timepicker', 'selected_time': '06: 00'
+                }, 'start_time_picker_input': {'start_time_picker_action': {'type': 'timepicker', 'selected_time': '13: 00'
                     }
-                }, 'end_time_picker_input': {'end_time_picker_action': {'type': 'timepicker', 'selected_time': '08: 00'
+                }, 'end_time_picker_input': {'end_time_picker_action': {'type': 'timepicker', 'selected_time': '15: 00'
                     }
-                }, 'long_text_input': {'long_text_input': {'type': 'plain_text_input', 'value': 'teafageaw'
+                }, 'long_text_input': {'long_text_input': {'type': 'plain_text_input', 'value': 'thueahfuehaig'
                     }
                 }
             }
-        }, 'hash': '1694884435.fYSeURNt', 'title': {'type': 'plain_text', 'text': 'My Modal', 'emoji': True
-        }, 'clear_on_close': False, 'notify_on_close': False, 'close': None, 'submit': {'type': 'plain_text', 'text': 'Submit', 'emoji': True
-        }, 'previous_view_id': None, 'root_view_id': 'V05T180P0AV', 'app_id': 'A05SJNZT87P', 'external_id': '', 'app_installed_team_id': 'T0KSB4BBJ', 'bot_id': 'B05SMMDM6QJ'
+        }, 'hash': '1694933046.lO07Jjva', 'title': {'type': 'plain_text', 'text': 'Request a Fly Day Event', 'emoji': True
+        }, 'clear_on_close': False, 'notify_on_close': False, 'close': None, 'submit': {'type': 'plain_text', 'text': 'Request Fly Day', 'emoji': True
+        }, 'previous_view_id': None, 'root_view_id': 'V05SGN73762', 'app_id': 'A05SJNZT87P', 'external_id': '', 'app_installed_team_id': 'T0KSB4BBJ', 'bot_id': 'B05SMMDM6QJ'
     }, 'response_urls': [], 'is_enterprise_install': False, 'enterprise': {'id': 'E7SAV7LAD', 'name': 'Stanford University'
     }
 }

@@ -46,9 +46,20 @@
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": ":question:\tQuestions? Message <@{user_id}>\n\n:eyes:\tInterested? React with :paperplane: to RSVP. This is not a commitment, just a way to gauge interest.\n\n:calendar:\tAdd this event to your calendar: <{google_calendar_link}|:google: Google Calendar> | <{apple_calendar_link}|:appl: Apple Calendar> | <{outlook_calendar_link}|:ms_outlook: Outlook>"
+          "text": ":question:\tQuestions? Message <@{user_id}>\n\n:eyes:\tInterested? React with :paperplane: to RSVP. This is not a commitment, just a way to gauge interest.\n\n:calendar:\tAdd this event to your calendar: <{google_calendar_link}|:google: Google Calendar> | <{apple_calendar_link}|Apple Calendar> | <{outlook_calendar_link}|:ms_outlook: Outlook>"
+        },
+        "accessory": {
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": "Click Me"
+            },
+            "url": "https://42e8-216-67-22-144.ngrok-free.app:5001/generate_calendar?summary=Event+Summary&description=Event+Description&location=Event+Location&start_time=2023-09-20T08:00:00&end_time=2023-09-20T10:00:00",
+            "value": "click_me_123",
+            "action_id": "button"
         }
       }
+
     ]
   }
   
