@@ -4,7 +4,7 @@
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "A new fly day event has been created by {user_mention}."
+          "text": "*:alert: FLY DAY :alert: FLY DAY :alert: FLY DAY :alert:*\n<@{user_id}> is hosting an upcoming fly day event."
         }
       },
       {
@@ -12,7 +12,7 @@
         "block_id": "section-1",
         "text": {
           "type": "mrkdwn",
-          "text": "*Where will you be flying?*\n{flying_field}"
+          "text": "*Location:* {flying_field}"
         }
       },
       {
@@ -20,7 +20,7 @@
         "block_id": "section-2",
         "text": {
           "type": "mrkdwn",
-          "text": "*What type of event?*\n{event_type}"
+          "text": "*Date:* {date}"
         }
       },
       {
@@ -28,7 +28,7 @@
         "block_id": "section-3",
         "text": {
           "type": "mrkdwn",
-          "text": "*Date:*\n{selected_date}"
+          "text": "*Time:* {start_time} - {end_time}"
         }
       },
       {
@@ -36,23 +36,7 @@
         "block_id": "section-4",
         "text": {
           "type": "mrkdwn",
-          "text": "*Start Time:*\n{start_time}"
-        }
-      },
-      {
-        "type": "section",
-        "block_id": "section-5",
-        "text": {
-          "type": "mrkdwn",
-          "text": "*End Time:*\n{end_time}"
-        }
-      },
-      {
-        "type": "section",
-        "block_id": "section-6",
-        "text": {
-          "type": "mrkdwn",
-          "text": "*Event Details (Optional):*\n{event_details}"
+          "text": "*Details:*\n{event_details}"
         }
       },
       {
@@ -62,7 +46,7 @@
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "Thank you for creating this event!"
+          "text": ":question:\tQuestions? Message <@{user_id}>\n\n:eyes:\tInterested? React with :paperplane: to RSVP. This is not a commitment, just a way to gauge interest.\n\n:calendar:\tAdd this event to your calendar: <{google_calendar_link}|:google: Google Calendar> | <{apple_calendar_link}|:appl: Apple Calendar> | <{outlook_calendar_link}|:ms_outlook: Outlook>"
         }
       }
     ]

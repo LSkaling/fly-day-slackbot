@@ -3,9 +3,17 @@
     "callback_id": "create-fly-day-modal",
     "title": {
         "type": "plain_text",
-        "text": "My Modal"
+        "text": "Request a Fly Day Event"
     },
     "blocks": [
+        {
+            "type": "section",
+            "block_id": "intro-section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "To request a Fly Day event, please provide the following information:"
+            }
+        },
         {
             "type": "section",
             "block_id": "section-1",
@@ -82,7 +90,7 @@
             "block_id": "context-section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*Private:* Only notifies the leadership team. \n *Public:* Notifies all members, and sends alerts leading up to the event."
+                "text": "*Private:* Only notifies the leadership team. \n *Public:* Notifies all members and sends alerts leading up to the event."
             }
         },
         {
@@ -149,6 +157,6 @@
     ],
     "submit": {
         "type": "plain_text",
-        "text": "Submit"
+        "text": "Request Fly Day"
     }
 }

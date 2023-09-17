@@ -1,0 +1,68 @@
+{
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*[Approval Needed]* <@{user_id}> is requesting to host an upcoming fly day event."
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*Event Details:* {event_details}"
+            },
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Event Type:* {event_type}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Date:* {date}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Start Time:* {start_time}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *End Time:* {end_time}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Location:* {flying_field}"
+                }
+            ]
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Accept",
+                        "emoji": true
+                    },
+                    "style": "primary",
+                    "action_id": "accept_button"
+                },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Deny",
+                        "emoji": true
+                    },
+                    "style": "danger",
+                    "action_id": "deny_button"
+                }
+            ]
+        }
+    ]
+}
