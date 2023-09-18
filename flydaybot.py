@@ -5,11 +5,17 @@ from dotenv import load_dotenv
 from pathlib import Path
 import json
 import urllib.parse
-from datetime import datetime
+from datetime import datetime 
 import mysql.connector
 from json_view_parser import parse_json
 import io
 from icalendar import Calendar, Event
+from urllib.parse import urlencode
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload, MediaInMemoryUpload
+from datetime import timedelta
+import time
 
 ## Slack Parameters
 FLIGHT_APPROVAL_CHANNEL = "C05TAMAAD08" #Channel ID for #fly-day-approval
@@ -17,6 +23,11 @@ FLIGHT_ANNOUNCEMENT_CHANNEL = "C05TAMAAD08" #Channel ID for #fly-day
 FLIGHT_COORDINATOR_CHANNEL = "C05SKL4BLQM" #Channel ID for #slack-bot-testing
 
 NON_FLIGHT_COORDINATOR = False
+
+DEBUG_MODE = True
+
+MESSAGE_TIME_DELAY_1 = 10
+MESSAGE_TIME_DELAY_2 = 12
 
 # Initializes your app with your bot token and socket mode handler
 env_path = Path('.') / '.env'
@@ -42,6 +53,54 @@ def get_flight_coordinators():
     )
     return response["members"]
 
+def upload_ics_content_to_google_drive(ics_content, folder_id):
+    # Set up Google Drive API credentials
+    credentials = service_account.Credentials.from_service_account_file(
+        'google_api_credentials.json',  # Replace with your credentials JSON file path
+        scopes=['https://www.googleapis.com/auth/drive']
+    )
+
+    # Create a Google Drive API client
+    drive_service = build('drive', 'v3', credentials=credentials)
+
+    # List folders accessible by the service account
+    folders = drive_service.files().list(q="mimeType='application/vnd.google-apps.folder'").execute()
+    print("Folders with access:")
+    # Print the list of folder names and IDs
+    for folder in folders.get('files', []):
+        print(f"Folder Name: {folder['name']}, Folder ID: {folder['id']}")
+
+    # Create a Google Drive API client
+    drive_service = build('drive', 'v3', credentials=credentials)
+
+    # Set the file name
+    file_name = "Fly Day Event.ics"
+
+    # Create a file metadata
+    file_metadata = {
+        'name': file_name,
+        'parents': [folder_id]  # ID of the target folder where you want to upload the file
+    }
+
+    # Convert the ics_content to bytes
+    ics_bytes = ics_content
+
+    # Upload the file
+    media = MediaInMemoryUpload(ics_bytes, mimetype='text/calendar', resumable=True)
+    file = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields='id'
+    ).execute()
+
+    # Get the file ID
+    file_id = file.get('id')
+
+    # Generate a download link
+    download_link = f"https://drive.google.com/uc?id={file_id}"
+
+    return download_link
+
 def generate_google_calendar_link(start_datetime, end_datetime, description, location):
     start = start_datetime.strftime('%Y%m%dT%H%M%S')
     end = end_datetime.strftime('%Y%m%dT%H%M%S')
@@ -55,13 +114,22 @@ def generate_google_calendar_link(start_datetime, end_datetime, description, loc
 
 def generate_apple_calendar_link(event_title, event_description, event_start, event_end, event_location):
     # Create a new Event
+    cal = Calendar()
+
     event = Event()
     event.add('summary', event_title)
     event.add('description', event_description)
     event.add('location', event_location)
     event.add('dtstart', event_start)
     event.add('dtend', event_end)
-    return event.to_ical().decode('utf-8')
+    cal.add_component(event)
+
+    ics_content = cal.to_ical()
+    with open('Fly Day Event.ics', 'wb') as ics_file:
+        ics_file.write(ics_content)
+    
+    return upload_ics_content_to_google_drive(ics_content, "1DAThCfFEQArqYtepkRSpHjSsYGV23FQu")
+
 
 def convert_to_datetime(date_str, start_time_str, end_time_str):
     # Combine date and time strings
@@ -112,6 +180,7 @@ def send_fly_day_announcement(user_id, flying_field, start_event, end_event, eve
     apple_calendar_link = generate_apple_calendar_link("Flight Club Fly Day", event_details, start_event, end_event, flying_field)
     print(apple_calendar_link)
 
+
     fly_day_announcement = parse_json("fly_day_announcement.json", {
         "user_id": user_id,
         "flying_field": flying_field,
@@ -120,28 +189,38 @@ def send_fly_day_announcement(user_id, flying_field, start_event, end_event, eve
         "end_time": end_event.strftime('%I:%M %p'),
         "event_details": event_details,
         "google_calendar_link": calendar_link,
-        "apple_calendar_link": calendar_link,
-        "outlook_calendar_link": calendar_link
+        "apple_calendar_link": apple_calendar_link,
     })
 
-    # with open("fly_day_announcement.json", "r") as view_file:
-    #     fly_day_announcement = json.load(view_file)
+    metadata = {
+        "event_type": "request_fly_day",
+        "event_payload": {
+            "user_id": user_id,
+            "start_datetime": start_event.strftime('%Y-%m-%d %H:%M:%S'),
+            "end_datetime": end_event.strftime('%Y-%m-%d %H:%M:%S'),
+            "event_details": event_details,
+            "location": flying_field,
+        }
+    }
 
-    # start_time = start_event.strftime('%I:%M %p')
-    # end_time = end_event.strftime('%I:%M %p')
-
-    # fly_day_announcement["blocks"][0]["text"]["text"] = f"*:alert: FLY DAY :alert: FLY DAY :alert: FLY DAY :alert:*\n<@{user_id}> is hosting an upcoming fly day event."
-    # fly_day_announcement["blocks"][1]["text"]["text"] = f"*Location:* {flying_field}"
-    # fly_day_announcement["blocks"][2]["text"]["text"] = f"*Date:* {start_event.strftime('%A, %B %d, %Y')}"
-    # fly_day_announcement["blocks"][3]["text"]["text"] = f"*Time:* {start_time} - {end_time}"
-    # fly_day_announcement["blocks"][4]["text"]["text"] = f"*Details:*\n{event_details}"
-    # fly_day_announcement["blocks"][6]["text"]["text"] = f":question:\tQuestions? Message <@{user_id}>\n\n:eyes:\tInterested? React with :paperplane: to RSVP. This is not a commitment, just a way to gauge interest.\n\n:calendar:\tAdd this event to your calendar: <{calendar_link}|:google: Google Calendar> | <{calendar_link}|:appl: Apple Calendar> | <{calendar_link}|:ms_outlook: Outlook>"
-
-    #save_event_to_database(start_event, end_event, event_details, flying_field, event_type, user_id, event_details)
-
-    app.client.chat_postMessage(
+    message = app.client.chat_postMessage(
         channel=FLIGHT_ANNOUNCEMENT_CHANNEL,
-        blocks=fly_day_announcement["blocks"]
+        blocks=fly_day_announcement["blocks"],
+        metadata=metadata,
+        unfurl_links=False
+    )
+
+    message_ts = message["ts"]
+
+    print("Message with metadata: \n\n")
+    print(message)
+    print("\n\n")
+
+    # Add a reaction to the message
+    app.client.reactions_add(
+        channel=FLIGHT_ANNOUNCEMENT_CHANNEL,
+        name="paperplane", 
+        timestamp=message_ts
     )
 
 def send_fly_day_request(user_id, flying_field, start_event, end_event, event_details, event_type):
@@ -284,7 +363,7 @@ def accept_request(ack, body, logger):
     #Message user that their request was accepted
     app.client.chat_postMessage(
         channel=user_id,
-        text=f"Your fly day request for {date} was approved! Please ensure you follow all the rules and guidelines for fly days found <https://flightclub.sites.stanford.edu|here>. Safe Flying!"
+        text=f"Your fly day request for {date} was approved! Please familiarize yourself with the policies detailed in our <https://docs.google.com/document/d/1pyoxCYjjysrCgiVqAd8dqCVMsu4x6yLDWyLQt181KcI/edit?usp=sharing|Program Operating Handbook> prior to the flight. Safe Flying!"
     )
 
     if event_type == "Public":
@@ -353,26 +432,139 @@ def handle_some_action(ack, body, logger):
     ack()
     logger.info(body)
 
-@flask_app.route('/generate_calendar')
-def generate_calendar():
-    print("Generating calendar")
-    # Get parameters from the request (e.g., summary, description, location, start_time, end_time)
-    summary = request.args.get('summary')
-    description = request.args.get('description')
-    location = request.args.get('location')
-    start_time = request.args.get('start_time')
-    end_time = request.args.get('end_time')
+# Function to schedule a reminder message
+def schedule_reminder(channel, text, delay_seconds):
+    current_time = time.time()
+    post_at = current_time + delay_seconds
+    print(f"Scheduling message for {int(post_at)}")
+    print(f"channel: {channel}")
+    app.client.chat_scheduleMessage(
+        channel=channel,
+        post_at=int(post_at),
+        text=text
+    )
 
-    # Generate iCalendar data
-    icalendar_data = generate_apple_calendar_link(summary, description, location, start_time, end_time)
+#run when a reaction is added to a message
+@app.event("reaction_added")
+def handle_reaction_added(body, logger):
+    print(body)
+    #check if the reaction was a paper airplane and was in the #fly-day channel
+    if body["event"]["reaction"] == "paperplane" and body["event"]["item"]["channel"] == FLIGHT_ANNOUNCEMENT_CHANNEL:
+        #get the metadata from the message
+        message_ts = body["event"]["item"]["ts"]
+        
+        reacting_member_id = body["event"]["user"]
 
-    # Set the appropriate content type
-    response = Response(icalendar_data, content_type='text/calendar')
+        #get the message
+        message = app.client.conversations_history(
+            channel=FLIGHT_ANNOUNCEMENT_CHANNEL,
+            latest=message_ts,
+            limit=1,
+            inclusive=True
+        )
 
-    # Set the filename for the iCalendar file (optional)
-    response.headers['Content-Disposition'] = 'attachment; filename="event.ics"'
+        print(message)
 
-    return response
+        #use the content of the message to retrieve the date, start time, end time, and flying field
+        message = message["messages"][0]
+        location = message["blocks"][1]["text"]["text"].split(":* ")[1]
+        date_str = message["blocks"][2]["text"]["text"].split(":* ")[1]
+        start_time_str, end_time_str = message["blocks"][3]["text"]["text"].split(":* ")[1].split(" - ")
+        event_type = message["metadata"]["event_type"]
+
+        message_link = f"https://stanfordflightclub.slack.com/archives/{FLIGHT_ANNOUNCEMENT_CHANNEL}/p{message_ts.replace('.', '')}"
+
+        # Convert the date strings to datetime objects
+        start_datetime = datetime.strptime(f"{date_str} {start_time_str}", "%A, %B %d, %Y %I:%M %p")
+        end_datetime = datetime.strptime(f"{date_str} {end_time_str}", "%A, %B %d, %Y %I:%M %p")
+
+        reminder_time_2_hours = start_datetime - timedelta(hours=2)
+        reminder_time_2_hours_str = reminder_time_2_hours.strftime("%Y-%m-%d %H:%M:%S")
+        reminder_message_2_hours = f"Reminder: Fly day happening in 2 hours at {location}!"
+        user_channel = message["user"]
+
+        # Schedule the 2-hour reminder
+        schedule_reminder(reacting_member_id, reminder_message_2_hours, MESSAGE_TIME_DELAY_1 if DEBUG_MODE else 7200)  # 1 second for debug, 7200 seconds (2 hours) for normal
+
+        # Calculate the time at 9 am the day before the event
+        reminder_time_9_am = start_datetime.replace(hour=9) - timedelta(days=1)
+        reminder_time_9_am_str = reminder_time_9_am.strftime("%Y-%m-%d %H:%M:%S")
+        reminder_message_9_am = f"Reminder: Fly day happening tomorrow at {start_datetime.strftime('%I:%M %p')} at {location}! Unreact to the message to stop receiving reminders." + "\n" + message_link
+
+        # Schedule the 9 am reminder
+        schedule_reminder(reacting_member_id, reminder_message_9_am, MESSAGE_TIME_DELAY_2 if DEBUG_MODE else (reminder_time_9_am - time.time()))  # 10 seconds for debug, actual time difference for normal
+
+
+@app.event("reaction_removed")
+def handle_reaction_removed(body, logger):
+    #check if the reaction was a paper airplane and was in the #fly-day channel
+    if body["event"]["reaction"] == "paperplane" and body["event"]["item"]["channel"] == FLIGHT_ANNOUNCEMENT_CHANNEL:
+        #get user id
+        reacting_member_id = body["event"]["user"]
+        direct_message_channel = app.client.conversations_open(
+            users=reacting_member_id
+        )["channel"]["id"]
+        print(reacting_member_id)
+
+        #get scheduled messages
+        scheduled_messages = app.client.chat_scheduledMessages_list(
+            channel=direct_message_channel
+        )
+
+        print(scheduled_messages)
+
+        #get the message
+        message = app.client.conversations_history(
+            channel=FLIGHT_ANNOUNCEMENT_CHANNEL,
+            latest=body["event"]["item"]["ts"],
+            limit=1,
+            inclusive=True
+        )
+
+        #use the content of the message to retrieve the date, start time, end time, and flying field
+        message = message["messages"][0]
+        location = message["blocks"][1]["text"]["text"].split(":* ")[1]
+        date_str = message["blocks"][2]["text"]["text"].split(":* ")[1]
+        start_time_str, end_time_str = message["blocks"][3]["text"]["text"].split(":* ")[1].split(" - ")
+        event_type = message["metadata"]["event_type"]
+
+        # Convert the date strings to datetime objects
+        start_datetime = datetime.strptime(f"{date_str} {start_time_str}", "%A, %B %d, %Y %I:%M %p")
+        end_datetime = datetime.strptime(f"{date_str} {end_time_str}", "%A, %B %d, %Y %I:%M %p")
+        
+        #determine the post_at time for the 2 hour reminder
+        reminder_time_2_hours = start_datetime - timedelta(hours=2)
+        if DEBUG_MODE:
+            reminder_time_2_hours = datetime.now() + timedelta(seconds=MESSAGE_TIME_DELAY_1)
+        reminder_time_2_hours_str = reminder_time_2_hours.strftime("%Y-%m-%d %H:%M:%S")
+
+        #determine the post_at time for the 9 am reminder
+        reminder_time_9_am = start_datetime.replace(hour=9) - timedelta(days=1)
+        if DEBUG_MODE:
+            reminder_time_2_hours = datetime.now() + timedelta(seconds=MESSAGE_TIME_DELAY_2)
+        reminder_time_9_am_str = reminder_time_9_am.strftime("%Y-%m-%d %H:%M:%S")
+
+        #loop through scheduled messages
+        for scheduled_message in scheduled_messages["scheduled_messages"]:
+            #check if the scheduled message is for the 2 hour reminder
+            if scheduled_message["post_at"] == reminder_time_2_hours_str:
+                #delete the scheduled message
+                app.client.chat_deleteScheduledMessage(
+                    channel=direct_message_channel,
+                    scheduled_message_id=scheduled_message["id"]
+                )
+                print("Deleted scheduled message")
+            #check if the scheduled message is for the 9 am reminder
+            elif scheduled_message["post_at"] == reminder_time_9_am_str:
+                #delete the scheduled message
+                app.client.chat_deleteScheduledMessage(
+                    channel=direct_message_channel,
+                    scheduled_message_id=scheduled_message["id"]
+                )
+                print("Deleted scheduled message")
+
+        
+    
 
 #Testing
 def test_handle_view_events():
