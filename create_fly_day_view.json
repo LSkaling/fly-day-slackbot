@@ -146,7 +146,7 @@
             "block_id": "long_text_input",
             "label": {
                 "type": "plain_text",
-                "text": "Event Details (Optional)"
+                "text": "Event Details"
             },
             "element": {
                 "type": "plain_text_input",
@@ -157,6 +157,6 @@
     ],
     "submit": {
         "type": "plain_text",
-        "text": "Request Fly Day"
+        "text": "{submit_button_text}"
     }
 }

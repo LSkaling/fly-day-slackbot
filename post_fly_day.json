@@ -1,0 +1,40 @@
+{
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "<@{user_id}> scheduled a private flying event."
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*Event Details:* {event_details}"
+            },
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Event Type:* {event_type}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Date:* {date}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Start Time:* {start_time}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *End Time:* {end_time}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "- *Location:* {flying_field}"
+                }
+            ]
+        }
+    ]
+}

@@ -18,16 +18,16 @@ from datetime import timedelta
 import time
 
 ## Slack Parameters
-FLIGHT_APPROVAL_CHANNEL = "C05TAMAAD08" #Channel ID for #fly-day-approval
-FLIGHT_ANNOUNCEMENT_CHANNEL = "C05TAMAAD08" #Channel ID for #fly-day
+FLIGHT_APPROVAL_CHANNEL = "C05SKL4BLQM" #Channel ID for #fly-day-approval
+FLIGHT_ANNOUNCEMENT_CHANNEL = "C05TT07PY8Y" #Channel ID for #fly-day
 FLIGHT_COORDINATOR_CHANNEL = "C05SKL4BLQM" #Channel ID for #slack-bot-testing
 
 NON_FLIGHT_COORDINATOR = False
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
-MESSAGE_TIME_DELAY_1 = 10
-MESSAGE_TIME_DELAY_2 = 12
+MESSAGE_TIME_DELAY_1 = 800
+MESSAGE_TIME_DELAY_2 = 1000
 
 # Initializes your app with your bot token and socket mode handler
 env_path = Path('.') / '.env'
@@ -101,25 +101,44 @@ def upload_ics_content_to_google_drive(ics_content, folder_id):
 
     return download_link
 
-def generate_google_calendar_link(start_datetime, end_datetime, description, location):
+def generate_event_description(event_details, location, coordinating_user_name):
+    if location == "Lake Lagunita":
+        directions = "visit flightclub.stanford.edu/getting-lake-lagunita"
+    elif location == "Coyote Hill":
+        directions = "visit flightclub.stanford.edu/getting-coyote-hill"
+    else:
+        directions = f"contact {coordinating_user_name} on Slack"    
+
+    return f"Join Stanford Flight Club for a Fly Day! \n\nFor directions to the flying site, {directions} \n\n Event Details:\n" + event_details
+
+def generate_event_location(location):
+    if(location == "Lake Lagunita"):
+        return "Lake Lagunita Barbecue Pit"
+    elif(location == "Coyote Hill"):
+        return "Coyote Hill Rd, Palo Alto, CA 94304"
+    else:
+        return "Off Campus"
+def generate_google_calendar_link(start_datetime, end_datetime, description, location, coordinating_user_name):
+
+
     start = start_datetime.strftime('%Y%m%dT%H%M%S')
     end = end_datetime.strftime('%Y%m%dT%H%M%S')
     title = urllib.parse.quote("Flight Club Fly Day")
-    description = urllib.parse.quote(description)
-    location = urllib.parse.quote(location)
+    description = urllib.parse.quote(generate_event_description(description, location, coordinating_user_name))
+    location = urllib.parse.quote(generate_event_location(location))
     
     link = f"https://www.google.com/calendar/render?action=TEMPLATE&text={title}&dates={start}/{end}&details={description}&location={location}"
     
     return link
 
-def generate_apple_calendar_link(event_title, event_description, event_start, event_end, event_location):
+def generate_apple_calendar_link(event_title, event_description, event_start, event_end, event_location, coordinating_user_name):
     # Create a new Event
     cal = Calendar()
 
     event = Event()
     event.add('summary', event_title)
-    event.add('description', event_description)
-    event.add('location', event_location)
+    event.add('description', generate_event_description(event_description, event_location, coordinating_user_name))
+    event.add('location', generate_event_location(event_location))
     event.add('dtstart', event_start)
     event.add('dtend', event_end)
     cal.add_component(event)
@@ -174,16 +193,43 @@ def save_event_to_database(start_event, end_event, event_details, flying_field, 
     cursor.close()
     conn.close()
 
-def send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details):
-    calendar_link = generate_google_calendar_link(start_event, end_event, event_details, flying_field)
-    print(calendar_link)
-    apple_calendar_link = generate_apple_calendar_link("Flight Club Fly Day", event_details, start_event, end_event, flying_field)
-    print(apple_calendar_link)
 
+def notify_flight_coordinators(user_id, flying_field, start_event, end_event, event_details, event_type):
+
+    fly_day_notification = parse_json("post_fly_day.json", {
+        "user_id": user_id,
+        "event_type": event_type,
+        "date": start_event.strftime('%A, %B %d, %Y'),
+        "start_time": start_event.strftime('%I:%M %p'),
+        "end_time": end_event.strftime('%I:%M %p'),
+        "flying_field": flying_field,
+        "event_details": event_details
+
+        
+        })
+    
+    app.client.chat_postMessage(
+        channel=FLIGHT_APPROVAL_CHANNEL,
+        blocks=fly_day_notification["blocks"],
+        text="Flying Event Scheduled",
+    )
+
+
+def send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details, coordinating_user_name):
+    calendar_link = generate_google_calendar_link(start_event, end_event, event_details, flying_field, coordinating_user_name)
+    apple_calendar_link = generate_apple_calendar_link("Flight Club Fly Day", event_details, start_event, end_event, flying_field, coordinating_user_name)
+
+    #ternary operator example
+    if flying_field == "Lake Lagunita":
+        flying_field_directions = " (<https://flightclub.sites.stanford.edu/getting-lake-lagunita|Directions>)"
+    elif flying_field == "Coyote Hill":
+        flying_field_directions = " (<https://flightclub.sites.stanford.edu/getting-coyote-hill|Directions>)"
+    else:
+        flying_field_directions = ""
 
     fly_day_announcement = parse_json("fly_day_announcement.json", {
         "user_id": user_id,
-        "flying_field": flying_field,
+        "flying_field": flying_field + flying_field_directions,
         "date": start_event.strftime('%A, %B %d, %Y'),
         "start_time": start_event.strftime('%I:%M %p'),
         "end_time": end_event.strftime('%I:%M %p'),
@@ -207,14 +253,11 @@ def send_fly_day_announcement(user_id, flying_field, start_event, end_event, eve
         channel=FLIGHT_ANNOUNCEMENT_CHANNEL,
         blocks=fly_day_announcement["blocks"],
         metadata=metadata,
+        text="Fly Day Announcement",
         unfurl_links=False
     )
 
     message_ts = message["ts"]
-
-    print("Message with metadata: \n\n")
-    print(message)
-    print("\n\n")
 
     # Add a reaction to the message
     app.client.reactions_add(
@@ -239,6 +282,7 @@ def send_fly_day_request(user_id, flying_field, start_event, end_event, event_de
         "event_type": "request_fly_day",
         "event_payload": {
             "user_id": user_id,
+            "user_name": app.client.users_info(user=user_id)["user"]["name"],
             "start_datetime": start_event.strftime('%Y-%m-%d %H:%M:%S'),
             "end_datetime": end_event.strftime('%Y-%m-%d %H:%M:%S'),
             "event_details": event_details,
@@ -250,12 +294,23 @@ def send_fly_day_request(user_id, flying_field, start_event, end_event, event_de
     app.client.chat_postMessage(
         channel=FLIGHT_APPROVAL_CHANNEL,
         blocks=request_fly_day_message["blocks"],
+        text="Fly Day Request",
         metadata=metadata
     )
 
 def get_metadata(body, parameter):
     return body['message']['metadata']['event_payload'][parameter]
     
+def validate_scheduled_time(start_datetime, end_datetime):
+    # Check if the start time is before the end time
+    if start_datetime > end_datetime:
+        return False
+
+    # Check if the start time is at least 2 hours in the future
+    if start_datetime < datetime.now() + timedelta(hours=1):
+        return False
+
+    return True
 
 @app.command("/flyday")
 def open_modal(ack, body, client):
@@ -268,9 +323,10 @@ def open_modal(ack, body, client):
         create_fly_day_view = json.load(view_file)
 
     # Check if the user is a flight coordinator
-    if user_id in flight_coordinators and not NON_FLIGHT_COORDINATOR: #Shows modal to directly schedule a fly day
+    if user_id in flight_coordinators and not NON_FLIGHT_COORDINATOR and user_id != "U020661S3FY": #Shows modal to directly schedule a fly day
         print("User is a flight coordinator")
-        create_fly_day_view["blocks"][0]["text"]["text"] = f"You are a Flight Coordinator, so this form will be sent directly to the #fly-day channel when you submit it."
+        create_fly_day_view["blocks"][0]["text"]["text"] = f"You are a Flight Coordinator, so this form will be sent directly to the #fly-day or #flight-coordinators channel when you submit it."
+        create_fly_day_view["submit"]["text"] = "Submit"
         client.views_open(
             trigger_id=body["trigger_id"],
             view=create_fly_day_view,  # Use the view JSON read from the file
@@ -278,19 +334,18 @@ def open_modal(ack, body, client):
     else: #Shows modal to request a fly day
         print("User is not a flight coordinator")
         create_fly_day_view["blocks"][0]["text"]["text"] = f"This form will be sent to the Flight Coordinators for approval before being sent to the #fly-day channel."
+        create_fly_day_view["submit"]["text"] = "Request Fly Day"
         client.views_open(
             trigger_id=body["trigger_id"],
             view=create_fly_day_view,  # Use the view JSON read from the file
         )
 
-    print(get_flight_coordinators())
     # Call views_open with the built-in client and the view JSON
 
 
 @app.view("create-fly-day-modal") #Handles submission of the modal
 def handle_view_events(ack, body, logger):
     ack()
-    print(body)
     # Extract user ID
     user_id = body['user']['id']
     
@@ -302,14 +357,22 @@ def handle_view_events(ack, body, logger):
     end_time = body['view']['state']['values']['end_time_picker_input']['end_time_picker_action']['selected_time']
     event_details = body['view']['state']['values']['long_text_input']['long_text_input']['value']
     user_is_flight_coordinator = user_id in get_flight_coordinators()
-
-    print("\n\n")
-    print(body['view']['private_metadata'])
+    coordinating_user_name = body['user']['name']
 
     start_event, end_event = convert_to_datetime(selected_date, start_time, end_time)
 
-    if user_is_flight_coordinator and not NON_FLIGHT_COORDINATOR:
-        send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details)
+    # Validate the scheduled time
+    if not validate_scheduled_time(start_event, end_event):
+        app.client.chat_postMessage(
+            channel=user_id,
+            text="Please enter a valid time and date. The start time must be at least 1 hour in the future."
+        )
+        return
+    elif user_is_flight_coordinator and not NON_FLIGHT_COORDINATOR:
+        if event_type == "Public":
+            send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details, coordinating_user_name)
+        else:
+            notify_flight_coordinators(user_id, flying_field, start_event, end_event, event_details, event_type)
     else:
         send_fly_day_request(user_id, flying_field, start_event, end_event, event_details, event_type)
 
@@ -321,6 +384,7 @@ def accept_request(ack, body, logger):
 
     #All info stored in metadata
     user_id = get_metadata(body, "user_id")
+    user_name = get_metadata(body, "user_name")
     start_datetime = get_metadata(body, "start_datetime")
     end_datetime = get_metadata(body, "end_datetime")
     event_details = get_metadata(body, "event_details")
@@ -367,7 +431,7 @@ def accept_request(ack, body, logger):
     )
 
     if event_type == "Public":
-        send_fly_day_announcement(user_id, location, start_datetime, end_datetime, event_details)
+        send_fly_day_announcement(user_id, location, start_datetime, end_datetime, event_details, user_name)
 
 @app.action("deny_button")
 def deny_request(ack, body, logger):
@@ -436,18 +500,19 @@ def handle_some_action(ack, body, logger):
 def schedule_reminder(channel, text, delay_seconds):
     current_time = time.time()
     post_at = current_time + delay_seconds
-    print(f"Scheduling message for {int(post_at)}")
+    print(f"Scheduling message for {int(post_at)}. Current time: {current_time}. Delay: {delay_seconds}")
     print(f"channel: {channel}")
-    app.client.chat_scheduleMessage(
+    response = app.client.chat_scheduleMessage(
         channel=channel,
         post_at=int(post_at),
         text=text
     )
+    #return response id
+    return response["scheduled_message_id"]
 
 #run when a reaction is added to a message
 @app.event("reaction_added")
 def handle_reaction_added(body, logger):
-    print(body)
     #check if the reaction was a paper airplane and was in the #fly-day channel
     if body["event"]["reaction"] == "paperplane" and body["event"]["item"]["channel"] == FLIGHT_ANNOUNCEMENT_CHANNEL:
         #get the metadata from the message
@@ -462,8 +527,6 @@ def handle_reaction_added(body, logger):
             limit=1,
             inclusive=True
         )
-
-        print(message)
 
         #use the content of the message to retrieve the date, start time, end time, and flying field
         message = message["messages"][0]
@@ -484,7 +547,7 @@ def handle_reaction_added(body, logger):
         user_channel = message["user"]
 
         # Schedule the 2-hour reminder
-        schedule_reminder(reacting_member_id, reminder_message_2_hours, MESSAGE_TIME_DELAY_1 if DEBUG_MODE else 7200)  # 1 second for debug, 7200 seconds (2 hours) for normal
+        print(schedule_reminder(reacting_member_id, reminder_message_2_hours, MESSAGE_TIME_DELAY_1 if DEBUG_MODE else 7200))  # 1 second for debug, 7200 seconds (2 hours) for normal
 
         # Calculate the time at 9 am the day before the event
         reminder_time_9_am = start_datetime.replace(hour=9) - timedelta(days=1)
@@ -492,7 +555,7 @@ def handle_reaction_added(body, logger):
         reminder_message_9_am = f"Reminder: Fly day happening tomorrow at {start_datetime.strftime('%I:%M %p')} at {location}! Unreact to the message to stop receiving reminders." + "\n" + message_link
 
         # Schedule the 9 am reminder
-        schedule_reminder(reacting_member_id, reminder_message_9_am, MESSAGE_TIME_DELAY_2 if DEBUG_MODE else (reminder_time_9_am - time.time()))  # 10 seconds for debug, actual time difference for normal
+        print(schedule_reminder(reacting_member_id, reminder_message_9_am, MESSAGE_TIME_DELAY_2 if DEBUG_MODE else (reminder_time_9_am - time.time())))  # 10 seconds for debug, actual time difference for normal
 
 
 @app.event("reaction_removed")
@@ -504,14 +567,11 @@ def handle_reaction_removed(body, logger):
         direct_message_channel = app.client.conversations_open(
             users=reacting_member_id
         )["channel"]["id"]
-        print(reacting_member_id)
 
         #get scheduled messages
         scheduled_messages = app.client.chat_scheduledMessages_list(
             channel=direct_message_channel
         )
-
-        print(scheduled_messages)
 
         #get the message
         message = app.client.conversations_history(
@@ -536,32 +596,38 @@ def handle_reaction_removed(body, logger):
         reminder_time_2_hours = start_datetime - timedelta(hours=2)
         if DEBUG_MODE:
             reminder_time_2_hours = datetime.now() + timedelta(seconds=MESSAGE_TIME_DELAY_1)
-        reminder_time_2_hours_str = reminder_time_2_hours.strftime("%Y-%m-%d %H:%M:%S")
+        #convert to unix    
+        reminder_time_2_hours_unix = reminder_time_2_hours.timestamp()
 
         #determine the post_at time for the 9 am reminder
         reminder_time_9_am = start_datetime.replace(hour=9) - timedelta(days=1)
         if DEBUG_MODE:
             reminder_time_2_hours = datetime.now() + timedelta(seconds=MESSAGE_TIME_DELAY_2)
-        reminder_time_9_am_str = reminder_time_9_am.strftime("%Y-%m-%d %H:%M:%S")
+        reminder_time_9_am_unix = reminder_time_9_am.timestamp()
+
+        def check_similar_timestamp(timestamp1, timestamp2):
+            return abs(int(timestamp1) - int(timestamp2)) < 10
 
         #loop through scheduled messages
         for scheduled_message in scheduled_messages["scheduled_messages"]:
             #check if the scheduled message is for the 2 hour reminder
-            if scheduled_message["post_at"] == reminder_time_2_hours_str:
+            #if check_similar_timestamp(scheduled_message["post_at"], reminder_time_2_hours_unix) or check_similar_timestamp(scheduled_message["post_at"], reminder_time_9_am_unix):
                 #delete the scheduled message
+            try:
                 app.client.chat_deleteScheduledMessage(
                     channel=direct_message_channel,
                     scheduled_message_id=scheduled_message["id"]
                 )
                 print("Deleted scheduled message")
-            #check if the scheduled message is for the 9 am reminder
-            elif scheduled_message["post_at"] == reminder_time_9_am_str:
-                #delete the scheduled message
-                app.client.chat_deleteScheduledMessage(
-                    channel=direct_message_channel,
-                    scheduled_message_id=scheduled_message["id"]
-                )
-                print("Deleted scheduled message")
+
+            except:
+                print("Wrong message")
+
+        print ("Remaining scheduled messages:")
+        
+        print(app.client.chat_scheduledMessages_list(
+            channel=direct_message_channel
+        ))
 
         
     
@@ -575,7 +641,7 @@ def test_handle_view_events():
     handle_view_events(lambda: None, payload, None)
 
 # Run the testing function
-test_handle_view_events()
+#test_handle_view_events()
 
 # Start your app
 if __name__ == "__main__":
