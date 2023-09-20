@@ -56,7 +56,7 @@ def get_flight_coordinators():
 def upload_ics_content_to_google_drive(ics_content, folder_id):
     # Set up Google Drive API credentials
     credentials = service_account.Credentials.from_service_account_file(
-        'google_api_credentials.json',  # Replace with your credentials JSON file path
+        'fly-day-bot-calendar-upload-63b752d25530.json',  # Replace with your credentials JSON file path
         scopes=['https://www.googleapis.com/auth/drive']
     )
 
