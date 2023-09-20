@@ -1,11 +1,11 @@
 BEGIN:VCALENDAR
 BEGIN:VEVENT
 SUMMARY:Flight Club Fly Day
-DTSTART:20230922T050000
-DTEND:20230922T070000
+DTSTART:20230921T030000
+DTEND:20230921T060000
 DESCRIPTION:Join Stanford Flight Club for a Fly Day! \n\nFor directions to
-  the flying site\, visit flightclub.stanford.edu/getting-coyote-hill \n\n 
- Event Details:\nheuahfueha
-LOCATION:Coyote Hill Rd\, Palo Alto\, CA 94304
+  the flying site\, visit flightclub.stanford.edu/getting-lake-lagunita \n\
+ n Event Details:\nTest Flight
+LOCATION:Lake Lagunita Barbecue Pit
 END:VEVENT
 END:VCALENDAR

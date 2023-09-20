@@ -368,7 +368,7 @@ def handle_view_events(ack, body, logger):
             text="Please enter a valid time and date. The start time must be at least 1 hour in the future."
         )
         return
-    elif user_is_flight_coordinator and not NON_FLIGHT_COORDINATOR:
+    elif user_is_flight_coordinator and not NON_FLIGHT_COORDINATOR and user_id != "U020661S3FY":
         if event_type == "Public":
             send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details, coordinating_user_name)
         else:
