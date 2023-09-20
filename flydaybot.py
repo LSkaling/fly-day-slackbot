@@ -54,7 +54,7 @@ def get_flight_coordinators():
     return response["members"]
 
 def upload_ics_content_to_google_drive(ics_content, folder_id):
-    # Set up Google Drive API credentials
+    # Sets up Google Drive API credentials
     credentials_info = {
         "type": "service_account",
         "project_id": os.environ.get("PROJECT_ID"),
