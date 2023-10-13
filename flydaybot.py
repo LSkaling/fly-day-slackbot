@@ -16,6 +16,8 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaInMemoryUpload
 from datetime import timedelta
 import time
+from boto.s3.connection import S3Connection
+
 
 ## Slack Parameters
 FLIGHT_APPROVAL_CHANNEL = "C05SKL4BLQM" #Channel ID for #fly-day-approval
@@ -30,18 +32,18 @@ MESSAGE_TIME_DELAY_1 = 800
 MESSAGE_TIME_DELAY_2 = 1000
 
 # Initializes your app with your bot token and socket mode handler
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=env_path)
+# env_path = Path('.') / '.env'
+# load_dotenv(dotenv_path=env_path)
 
-db_config = {
-    'user': os.environ.get("DB_USER"),
-    'password': os.environ.get("DB_PASSWORD"),
-    'host': os.environ.get("DB_HOST"),
-    'database': os.environ.get("DB_NAME"),
-    'raise_on_warnings': True
-}
+# db_config = {
+#     'user': os.environ.get("DB_USER"),
+#     'password': os.environ.get("DB_PASSWORD"),
+#     'host': os.environ.get("DB_HOST"),
+#     'database': os.environ.get("DB_NAME"),
+#     'raise_on_warnings': True
+# }
 
-app = App(token=os.environ.get("SLACK_TOKEN"))
+app = App(token=os.environ["SLACK_TOKEN"])
 
 # Helper functions
 def get_flight_coordinators():
@@ -57,15 +59,15 @@ def upload_ics_content_to_google_drive(ics_content, folder_id):
     # Sets up Google Drive API credentials
     credentials_info = {
         "type": "service_account",
-        "project_id": os.environ.get("PROJECT_ID"),
-        "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
-        "private_key": os.environ.get("PRIVATE_KEY"),
-        "client_email": os.environ.get("CLIENT_EMAIL"),
-        "client_id": os.environ.get("CLIENT_ID"),
+        "project_id": os.environ["PROJECT_ID"],
+        "private_key_id": os.environ["PRIVATE_KEY_ID"],
+        "private_key": os.environ["PRIVATE_KEY"],
+        "client_email": os.environ["CLIENT_EMAIL"],
+        "client_id": os.environ["CLIENT_ID"],
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": os.environ.get("CLIENT_X509"),
+        "client_x509_cert_url": os.environ["CLIENT_X509"],
         "universal_domain": "googleapis.com"
     }
 
@@ -182,30 +184,30 @@ def convert_to_datetime(date_str, start_time_str, end_time_str):
 
     return start_datetime, end_datetime
 
-def save_event_to_database(start_event, end_event, event_details, flying_field, event_type, user_id, event_description):
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor()
+# def save_event_to_database(start_event, end_event, event_details, flying_field, event_type, user_id, event_description):
+#     conn = mysql.connector.connect(**db_config)
+#     cursor = conn.cursor()
 
-    event_data = {
-        "start_datetime": start_event.strftime('%Y-%m-%d %H:%M:%S'),
-        "end_datetime": end_event.strftime('%Y-%m-%d %H:%M:%S'),
-        "event_details": event_details,
-        "location": flying_field,
-        "event_type": event_type,
-        "organizer": user_id,
-        "description": event_description
-    }
+#     event_data = {
+#         "start_datetime": start_event.strftime('%Y-%m-%d %H:%M:%S'),
+#         "end_datetime": end_event.strftime('%Y-%m-%d %H:%M:%S'),
+#         "event_details": event_details,
+#         "location": flying_field,
+#         "event_type": event_type,
+#         "organizer": user_id,
+#         "description": event_description
+#     }
 
-    # SQL query to insert a row into the events table
-    insert_query = """
-    INSERT INTO events (start_datetime, end_datetime, event_details, location, event_type, organizer, description)
-    VALUES (%(start_datetime)s, %(end_datetime)s, %(event_details)s, %(location)s, %(event_type)s, %(organizer)s, %(description)s)
-    """
+#     # SQL query to insert a row into the events table
+#     insert_query = """
+#     INSERT INTO events (start_datetime, end_datetime, event_details, location, event_type, organizer, description)
+#     VALUES (%(start_datetime)s, %(end_datetime)s, %(event_details)s, %(location)s, %(event_type)s, %(organizer)s, %(description)s)
+#     """
 
-    cursor.execute(insert_query, event_data)
-    conn.commit()
-    cursor.close()
-    conn.close()
+#     cursor.execute(insert_query, event_data)
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
 
 
 def notify_flight_coordinators(user_id, flying_field, start_event, end_event, event_details, event_type):
