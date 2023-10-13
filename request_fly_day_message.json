@@ -46,7 +46,7 @@
                     "type": "button",
                     "text": {
                         "type": "plain_text",
-                        "text": "Accept",
+                        "text": "Approve",
                         "emoji": true
                     },
                     "style": "primary",

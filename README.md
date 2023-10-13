@@ -1,0 +1,1 @@
+This is a Slack bot used by the Stanford Flight Club for coordinating fly day events
