@@ -45,6 +45,9 @@ MESSAGE_TIME_DELAY_2 = 1000
 #     'raise_on_warnings': True
 # }
 
+print(repr(os.environ.get('PRIVATE_KEY')))
+
+
 app = App(token=os.environ["SLACK_TOKEN"], signing_secret=os.environ["SIGNING_SECRET"])
 flask_app = Flask(__name__)
 handler = SlackRequestHandler(app)
@@ -70,7 +73,7 @@ def upload_ics_content_to_google_drive(ics_content, folder_id):
         "type": "service_account",
         "project_id": os.environ["PROJECT_ID"],
         "private_key_id": os.environ["PRIVATE_KEY_ID"],
-        "private_key": os.environ["PRIVATE_KEY"],
+        "private_key": os.environ["PRIVATE_KEY"].replace('\\n', '\n'),
         "client_email": os.environ["CLIENT_EMAIL"],
         "client_id": os.environ["CLIENT_ID"],
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -192,32 +195,6 @@ def convert_to_datetime(date_str, start_time_str, end_time_str):
         return None, None  # Return None for both if parsing fails
 
     return start_datetime, end_datetime
-
-# def save_event_to_database(start_event, end_event, event_details, flying_field, event_type, user_id, event_description):
-#     conn = mysql.connector.connect(**db_config)
-#     cursor = conn.cursor()
-
-#     event_data = {
-#         "start_datetime": start_event.strftime('%Y-%m-%d %H:%M:%S'),
-#         "end_datetime": end_event.strftime('%Y-%m-%d %H:%M:%S'),
-#         "event_details": event_details,
-#         "location": flying_field,
-#         "event_type": event_type,
-#         "organizer": user_id,
-#         "description": event_description
-#     }
-
-#     # SQL query to insert a row into the events table
-#     insert_query = """
-#     INSERT INTO events (start_datetime, end_datetime, event_details, location, event_type, organizer, description)
-#     VALUES (%(start_datetime)s, %(end_datetime)s, %(event_details)s, %(location)s, %(event_type)s, %(organizer)s, %(description)s)
-#     """
-
-#     cursor.execute(insert_query, event_data)
-#     conn.commit()
-#     cursor.close()
-#     conn.close()
-
 
 def notify_flight_coordinators(user_id, flying_field, start_event, end_event, event_details, event_type):
 
@@ -393,7 +370,7 @@ def handle_view_events(ack, body, logger):
             text="Please enter a valid time and date. The start time must be at least 1 hour in the future."
         )
         return
-    elif user_is_flight_coordinator and not NON_FLIGHT_COORDINATOR and user_id != "U020661S3FY":
+    elif user_is_flight_coordinator and not NON_FLIGHT_COORDINATOR:# and user_id != "U020661S3FY":
         if event_type == "Public":
             send_fly_day_announcement(user_id, flying_field, start_event, end_event, event_details, coordinating_user_name)
         else:
