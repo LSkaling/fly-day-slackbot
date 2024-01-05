@@ -1,6 +1,6 @@
 import os
 from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_bolt.adapter.flask import SlackRequestHandler
 from dotenv import load_dotenv
 from pathlib import Path
 import json
@@ -17,6 +17,8 @@ from googleapiclient.http import MediaFileUpload, MediaInMemoryUpload
 from datetime import timedelta
 import time
 from boto.s3.connection import S3Connection
+
+from flask import Flask, request
 
 
 ## Slack Parameters
@@ -43,7 +45,14 @@ MESSAGE_TIME_DELAY_2 = 1000
 #     'raise_on_warnings': True
 # }
 
-app = App(token=os.environ["SLACK_TOKEN"])
+app = App(token=os.environ["SLACK_TOKEN"], signing_secret=os.environ["SIGNING_SECRET"])
+flask_app = Flask(__name__)
+handler = SlackRequestHandler(app)
+
+@flask_app.route("/slack/events", methods=["POST"])
+def slack_events():
+    return handler.handle(request)
+
 
 # Helper functions
 def get_flight_coordinators():
@@ -339,7 +348,7 @@ def open_modal(ack, body, client):
         create_fly_day_view = json.load(view_file)
 
     # Check if the user is a flight coordinator
-    if user_id in flight_coordinators and not NON_FLIGHT_COORDINATOR and user_id != "U020661S3FY": #Shows modal to directly schedule a fly day
+    if user_id in flight_coordinators and not NON_FLIGHT_COORDINATOR:# and user_id != "U020661S3FY": #Shows modal to directly schedule a fly day
         print("User is a flight coordinator")
         create_fly_day_view["blocks"][0]["text"]["text"] = f"You are a Flight Coordinator, so this form will be sent directly to the #fly-day or #flight-coordinators channel when you submit it."
         create_fly_day_view["submit"]["text"] = "Submit"
@@ -659,6 +668,6 @@ def test_handle_view_events():
 # Run the testing function
 #test_handle_view_events()
 
-# Start your app
 if __name__ == "__main__":
-    SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
+    port = int(os.environ.get("PORT", 3000))
+    flask_app.run(host='0.0.0.0', port=port)
