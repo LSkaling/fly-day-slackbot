@@ -22,9 +22,9 @@ from flask import Flask, request
 
 
 ## Slack Parameters
-FLIGHT_APPROVAL_CHANNEL = "C05SKL4BLQM" #Channel ID for #fly-day-approval
-FLIGHT_ANNOUNCEMENT_CHANNEL = "C05TT07PY8Y" #Channel ID for #fly-day
-FLIGHT_COORDINATOR_CHANNEL = "C05SKL4BLQM" #Channel ID for #slack-bot-testing
+FLIGHT_APPROVAL_CHANNEL = "C05SKL4BLQM" #Channel ID for #flight-coordinators
+FLIGHT_ANNOUNCEMENT_CHANNEL = "CJHTZE9T8" #Channel ID for #fly-day
+FLIGHT_COORDINATOR_CHANNEL = "C05SKL4BLQM" #Channel ID for #flight-coordinators
 
 NON_FLIGHT_COORDINATOR = False
 
@@ -512,7 +512,7 @@ def schedule_reminder(channel, text, delay_seconds):
     #return response id
     return response["scheduled_message_id"]
 
-#run when a reaction is added to a message
+#run when a reaction is added to a message - eventually want to have this send reminders, but for now it just gauges interest
 @app.event("reaction_added")
 def handle_reaction_added(body, logger):
     #check if the reaction was a paper airplane and was in the #fly-day channel
@@ -549,7 +549,7 @@ def handle_reaction_added(body, logger):
         user_channel = message["user"]
 
         # Schedule the 2-hour reminder
-        print(schedule_reminder(reacting_member_id, reminder_message_2_hours, MESSAGE_TIME_DELAY_1 if DEBUG_MODE else 7200))  # 1 second for debug, 7200 seconds (2 hours) for normal
+        #print(schedule_reminder(reacting_member_id, reminder_message_2_hours, delay_seconds=remind))  # 1 second for debug, 7200 seconds (2 hours) for normal
 
         # Calculate the time at 9 am the day before the event
         reminder_time_9_am = start_datetime.replace(hour=9) - timedelta(days=1)
@@ -557,7 +557,7 @@ def handle_reaction_added(body, logger):
         reminder_message_9_am = f"Reminder: Fly day happening tomorrow at {start_datetime.strftime('%I:%M %p')} at {location}! Unreact to the message to stop receiving reminders." + "\n" + message_link
 
         # Schedule the 9 am reminder
-        print(schedule_reminder(reacting_member_id, reminder_message_9_am, MESSAGE_TIME_DELAY_2 if DEBUG_MODE else (reminder_time_9_am - time.time())))  # 10 seconds for debug, actual time difference for normal
+        #print(schedule_reminder(reacting_member_id, reminder_message_9_am, MESSAGE_TIME_DELAY_2 if DEBUG_MODE else (reminder_time_9_am - time.time())))  # 10 seconds for debug, actual time difference for normal
 
 
 @app.event("reaction_removed")
