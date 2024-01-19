@@ -45,8 +45,6 @@ MESSAGE_TIME_DELAY_2 = 1000
 #     'raise_on_warnings': True
 # }
 
-print(repr(os.environ.get('PRIVATE_KEY')))
-
 
 app = App(token=os.environ["SLACK_TOKEN"], signing_secret=os.environ["SIGNING_SECRET"])
 flask_app = Flask(__name__)
@@ -309,7 +307,7 @@ def validate_scheduled_time(start_datetime, end_datetime):
         return False
 
     # Check if the start time is at least 2 hours in the future
-    if start_datetime < datetime.now() + timedelta(hours=1):
+    if start_datetime < datetime.now():
         return False
 
     return True
