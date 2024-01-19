@@ -315,7 +315,9 @@ def validate_scheduled_time(start_datetime, end_datetime):
         return False
 
     # Check if the start time is at least 2 hours in the future
-    if start_datetime < datetime.now():
+    pacific_tz = pytz.timezone('America/Los_Angeles')
+    
+    if start_datetime < datetime.now(pacific_tz):
         print("Start time is in the past")
         print(start_datetime)
         print(datetime.now())
