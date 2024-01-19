@@ -17,6 +17,7 @@ from googleapiclient.http import MediaFileUpload, MediaInMemoryUpload
 from datetime import timedelta
 import time
 from boto.s3.connection import S3Connection
+import pytz
 
 from flask import Flask, request
 
@@ -177,6 +178,9 @@ def generate_apple_calendar_link(event_title, event_description, event_start, ev
 
 
 def convert_to_datetime(date_str, start_time_str, end_time_str):
+    # Define the Pacific timezone
+    pacific_tz = pytz.timezone('America/Los_Angeles')
+
     # Combine date and time strings
     start_datetime_str = f"{date_str} {start_time_str}"
     end_datetime_str = f"{date_str} {end_time_str}"
@@ -185,9 +189,13 @@ def convert_to_datetime(date_str, start_time_str, end_time_str):
     date_format = "%Y-%m-%d %H:%M"
 
     try:
-        # Parse the datetime strings into datetime objects
-        start_datetime = datetime.strptime(start_datetime_str, date_format)
-        end_datetime = datetime.strptime(end_datetime_str, date_format)
+        # Parse the datetime strings into datetime objects in local time
+        local_start_datetime = datetime.strptime(start_datetime_str, date_format)
+        local_end_datetime = datetime.strptime(end_datetime_str, date_format)
+
+        # Convert local datetime objects to Pacific timezone
+        start_datetime = pacific_tz.localize(local_start_datetime)
+        end_datetime = pacific_tz.localize(local_end_datetime)
     except ValueError as e:
         # Handle parsing errors (e.g., invalid format)
         return None, None  # Return None for both if parsing fails
@@ -308,6 +316,13 @@ def validate_scheduled_time(start_datetime, end_datetime):
 
     # Check if the start time is at least 2 hours in the future
     if start_datetime < datetime.now():
+        print("Start time is in the past")
+        print(start_datetime)
+        print(datetime.now())
+        #convert to formatted string and print
+        print(start_datetime.strftime('%Y-%m-%d %H:%M:%S'))
+        print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        
         return False
 
     return True
